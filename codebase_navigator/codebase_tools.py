@@ -147,7 +147,6 @@ def check_best_practices(code_snippet: str = "", language: str = "python") -> di
             "error_message": f"Failed to check best practices: {str(e)}"
         }
 
-
 def get_tech_stack_info(component: str = "") -> dict:
     """Get information about the technology stack and tools used.
     
