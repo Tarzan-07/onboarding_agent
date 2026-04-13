@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+    postgres:
+        image: postgres:16-alpine
+        container_name: postgres_db
+        environment: 
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: onboarding_db
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    redis:
+        image: redis:7-alpine
+        container_name: redis_cache
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis_data:/data
+        healthcheck:
+            test: ["CMD-SHELL", "redis-cli", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    loki:
+        image: grafana/loki:2.9.8
+        container_name: loki
+        command: -config.file=/etc/loki/local-config.yaml
+        ports:
+            - "3100:3100"
+        volumes:
+            - ./loki-config.yaml:/etc/loki/local-config.yaml:ro
+
+    grafana:
+        image: grafana/grafana-oss:10.4.5
+        container_name: grafana
+        ports:
+            - "3001:3001"
+        environment:
+            GF_SECURITY_ADMIN_USER: admin
+            GF_SECURITY_ADMIN_PASSWORD: admin
+        depends_on:
+            - loki
+        volumes:
+            - grafana_data:/var/lib/grafana
+            - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+            - ./grafana-dashboards.yaml:/etc/grafana/provisioning/dashboards/provisioning.yaml:ro
+            - ./dashboards:/etc/grafana/provisioning/dashboards:ro
+
+volumes:
+    postgres_data:
+    redis_data:
+    grafana_data:
